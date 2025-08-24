@@ -1,5 +1,5 @@
-import { Event } from '../types';
-import { getWeekDates, isDateInRange } from './dateUtils';
+import { Event, EventForm } from '../types';
+import { formatDate, getWeekDates, isDateInRange } from './dateUtils';
 
 function filterEventsByDateRange(events: Event[], start: Date, end: Date): Event[] {
   return events.filter((event) => {
@@ -55,4 +55,69 @@ export function getFilteredEvents(
   }
 
   return searchedEvents;
+}
+
+export function generateRecurringEvents(event: EventForm, repeatEndDate: string) {
+  const recurringEvents: EventForm[] = [];
+  const { repeat } = event;
+
+  if (repeat.type === 'none') {
+    return [event];
+  }
+
+  const startDate = new Date(event.date);
+  const endDate = new Date(repeatEndDate);
+  const originalDay = startDate.getDate();
+  const originalMonth = startDate.getMonth();
+
+  let currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    recurringEvents.push({ ...event, date: formatDate(currentDate) });
+
+    switch (repeat.type) {
+      case 'daily':
+        currentDate.setDate(currentDate.getDate() + repeat.interval);
+        break;
+      case 'weekly':
+        currentDate.setDate(currentDate.getDate() + 7 * repeat.interval);
+        break;
+      case 'monthly': {
+        let foundNextDate = false;
+        let tempDate = new Date(currentDate);
+        while (!foundNextDate) {
+          const nextMonth = tempDate.getMonth() + repeat.interval;
+          const nextYear = tempDate.getFullYear();
+          const newDate = new Date(nextYear, nextMonth, originalDay);
+
+          if (newDate.getMonth() === (nextMonth % 12)) {
+            currentDate = newDate;
+            foundNextDate = true;
+          } else {
+            tempDate = new Date(nextYear, nextMonth, 1);
+          }
+        }
+        break;
+      }
+      case 'yearly': {
+        let foundNextDate = false;
+        let yearToTry = currentDate.getFullYear();
+        while (!foundNextDate) {
+          yearToTry += repeat.interval;
+          const newDate = new Date(yearToTry, originalMonth, originalDay);
+
+          if (newDate.getMonth() === originalMonth) {
+            currentDate = newDate;
+            foundNextDate = true;
+          }
+        }
+        break;
+      }
+      default:
+        currentDate = new Date(endDate.getTime() + 1);
+        break;
+    }
+  }
+
+  return recurringEvents;
 }
