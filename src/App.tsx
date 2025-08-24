@@ -36,7 +36,7 @@ import { useEventOperations } from './hooks/useEventOperations.ts';
 import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
 // import { Event, EventForm, RepeatType } from './types';
-import { Event, EventForm } from './types';
+import { Event, EventForm, RepeatType } from './types';
 import {
   formatDate,
   formatMonth,
@@ -77,7 +77,7 @@ function App() {
     isRepeating,
     setIsRepeating,
     repeatType,
-    // setRepeatType,
+    setRepeatType,
     repeatInterval,
     // setRepeatInterval,
     repeatEndDate,
@@ -420,6 +420,22 @@ function App() {
               label="반복 일정"
             />
           </FormControl>
+          {isRepeating && (
+            <FormControl>
+              <FormLabel>반복 유형</FormLabel>
+              <Select
+                size="small"
+                value={repeatType}
+                onChange={(e) => setRepeatType(e.target.value as RepeatType)}
+              >
+                <MenuItem value="none">없음</MenuItem>
+                <MenuItem value="daily">매일</MenuItem>
+                <MenuItem value="weekly">매주</MenuItem>
+                <MenuItem value="monthly">매월</MenuItem>
+                <MenuItem value="yearly">매년</MenuItem>
+              </Select>
+            </FormControl>
+          )}
 
           <FormControl fullWidth>
             <FormLabel htmlFor="notification">알림 설정</FormLabel>
