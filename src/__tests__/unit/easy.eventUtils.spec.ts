@@ -117,7 +117,6 @@ describe('getFilteredEvents', () => {
 
 describe('generateRecurringEvents', () => {
   const baseEvent: EventForm = {
-    id: '1',
     date: '2025-08-25',
     title: '반복 테스트 이벤트',
     description: '',
@@ -129,6 +128,7 @@ describe('generateRecurringEvents', () => {
       type: 'none',
       interval: 1,
     },
+    notificationTime: 0,
   };
 
   it('반복 유형이 "none"일 경우, 원본 이벤트만 포함된 배열을 반환해야 한다', () => {
@@ -216,3 +216,4 @@ describe('generateRecurringEvents', () => {
     expect(result[0].date).toBe('2025-08-25');
   });
 });
+
