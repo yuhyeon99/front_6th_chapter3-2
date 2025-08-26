@@ -171,3 +171,74 @@ it("네트워크 오류 시 '일정 삭제 실패'라는 텍스트가 노출되�
 
   expect(result.current.events).toHaveLength(1);
 });
+
+it('반복일정을 삭제하면 해당 일정만 삭제합니다.', async () => {
+  const mockRecurringEvents: Event[] = [
+    {
+      id: 'recur-1',
+      title: '매일 회의',
+      date: '2025-08-26',
+      startTime: '10:00',
+      endTime: '10:30',
+      description: '데일리 스크럼',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+    },
+    {
+      id: 'recur-2',
+      title: '매일 회의',
+      date: '2025-08-27',
+      startTime: '10:00',
+      endTime: '10:30',
+      description: '데일리 스크럼',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+    },
+    {
+      id: 'recur-3',
+      title: '매일 회의',
+      date: '2025-08-28',
+      startTime: '10:00',
+      endTime: '10:30',
+      description: '데일리 스크럼',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1 },
+      notificationTime: 10,
+    },
+  ];
+
+  server.use(
+    http.get('/api/events', () => {
+      return HttpResponse.json({ events: mockRecurringEvents });
+    }),
+    http.delete('/api/events/:id', ({ params }) => {
+      const { id } = params;
+      const index = mockRecurringEvents.findIndex((event) => event.id === id);
+      if (index !== -1) {
+        mockRecurringEvents.splice(index, 1);
+      }
+      return new HttpResponse(null, { status: 204 });
+    })
+  );
+
+  const { result } = renderHook(() => useEventOperations(false));
+
+  await act(() => Promise.resolve());
+
+  expect(result.current.events).toHaveLength(3);
+
+  await act(async () => {
+    await result.current.deleteEvent('recur-2');
+  });
+
+  expect(result.current.events).toHaveLength(2);
+  expect(result.current.events.find((e) => e.id === 'recur-2')).toBeUndefined();
+  expect(result.current.events.map((e) => e.id)).toEqual(['recur-1', 'recur-3']);
+
+  server.resetHandlers();
+});
