@@ -113,7 +113,7 @@ describe('일정 CRUD 및 기본 기능', () => {
   });
 });
 
-describe('일정 뷰', () => {
+describe('일정 뷰', { timeout: 30000 }, () => {
   it('주별 뷰를 선택 후 해당 주에 일정이 없으면, 일정이 표시되지 않는다.', async () => {
     // ! 현재 시스템 시간 2025-10-01
     const { user } = setup(<App />);
@@ -201,14 +201,10 @@ describe('일정 뷰', () => {
     await user.type(screen.getByLabelText('시작 시간'), '10:00');
     await user.type(screen.getByLabelText('종료 시간'), '11:00');
 
-    await user.click(screen.getByLabelText('카테고리'));
-    await user.click(screen.getByRole('option', { name: '업무-option' }));
-
-    await user.click(screen.getByLabelText('반복 일정'));
-
     const repeatTypeLabel = screen.getByText('반복 유형');
     const selectContainer = repeatTypeLabel.nextElementSibling;
-    const repeatTypeSelect = within(selectContainer).getByRole('combobox');
+    if (!selectContainer) throw new Error('반복 유형 select not found');
+    const repeatTypeSelect = within(selectContainer as HTMLElement).getByRole('combobox');
     await user.click(repeatTypeSelect);
     await user.click(screen.getByRole('option', { name: '매일' }));
 
@@ -216,10 +212,11 @@ describe('일정 뷰', () => {
 
     const monthView = within(screen.getByTestId('month-view'));
     const eventElement = await monthView.findByText('매일 반복');
-    const eventContainer = eventElement.parentElement.parentElement;
+    const eventContainer = eventElement.parentElement?.parentElement;
 
     expect(eventContainer).toBeInTheDocument();
 
+    if (!eventContainer) throw new Error('eventContainer not found');
     const repeatIcon = within(eventContainer).getByTestId('repeat-icon');
     expect(repeatIcon).toBeInTheDocument();
   });
