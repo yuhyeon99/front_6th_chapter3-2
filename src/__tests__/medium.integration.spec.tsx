@@ -5,7 +5,6 @@ import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { SnackbarProvider } from 'notistack';
 import { ReactElement } from 'react';
-import { debug } from 'vitest-preview';
 
 import {
   setupMockHandlerCreation,
@@ -209,9 +208,7 @@ describe('일정 뷰', () => {
 
     const repeatTypeLabel = screen.getByText('반복 유형');
     const selectContainer = repeatTypeLabel.nextElementSibling;
-
-    if (!selectContainer) throw new Error('반복 유형 select not found');
-    const repeatTypeSelect = within(selectContainer as HTMLElement).getByRole('combobox');
+    const repeatTypeSelect = within(selectContainer).getByRole('combobox');
     await user.click(repeatTypeSelect);
     await user.click(screen.getByRole('option', { name: '매일' }));
 
@@ -219,11 +216,10 @@ describe('일정 뷰', () => {
 
     const monthView = within(screen.getByTestId('month-view'));
     const eventElement = await monthView.findByText('매일 반복');
-    const eventContainer = eventElement.parentElement?.parentElement;
+    const eventContainer = eventElement.parentElement.parentElement;
 
     expect(eventContainer).toBeInTheDocument();
 
-    if (!eventContainer) throw new Error('eventContainer not found');
     const repeatIcon = within(eventContainer).getByTestId('repeat-icon');
     expect(repeatIcon).toBeInTheDocument();
   });
