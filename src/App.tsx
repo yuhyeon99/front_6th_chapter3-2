@@ -1,4 +1,4 @@
-import { Notifications, ChevronLeft, ChevronRight, Delete, Edit, Close } from '@mui/icons-material';
+import { Notifications, ChevronLeft, ChevronRight, Delete, Edit, Close, Repeat } from '@mui/icons-material';
 import {
   Alert,
   AlertTitle,
@@ -200,6 +200,7 @@ function App() {
                             }}
                           >
                             <Stack direction="row" spacing={1} alignItems="center">
+                              {event.repeat.type !== 'none' && <Repeat data-testid="repeat-icon" fontSize="small" />}
                               {isNotified && <Notifications fontSize="small" />}
                               <Typography
                                 variant="caption"
@@ -287,6 +288,7 @@ function App() {
                                   }}
                                 >
                                   <Stack direction="row" spacing={1} alignItems="center">
+                                    {event.repeat.type !== 'none' && <Repeat data-testid="repeat-icon" fontSize="small" />}
                                     {isNotified && <Notifications fontSize="small" />}
                                     <Typography
                                       variant="caption"
@@ -436,9 +438,8 @@ function App() {
             </Select>
           </FormControl>
 
-          {/* ! 반복은 8주차 과제에 포함됩니다. 구현하고 싶어도 참아주세요~ */}
           {isRepeating && (
-            <Stack spacing={2}>
+            <Stack spacing={2} data-testid="repeat-section">
               <FormControl fullWidth>
                 <FormLabel>반복 유형</FormLabel>
                 <Select
