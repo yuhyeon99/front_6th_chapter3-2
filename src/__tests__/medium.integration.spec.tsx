@@ -189,6 +189,40 @@ describe('일정 뷰', () => {
     const januaryFirstCell = within(monthView).getByText('1').closest('td')!;
     expect(within(januaryFirstCell).getByText('신정')).toBeInTheDocument();
   });
+
+  it('월별 뷰에서 반복 일정이 아이콘과 함께 표시되는지 확인한다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '매일 반복');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-15');
+    await user.type(screen.getByLabelText('시작 시간'), '10:00');
+    await user.type(screen.getByLabelText('종료 시간'), '11:00');
+
+    await user.click(screen.getByLabelText('카테고리'));
+    await user.click(screen.getByRole('option', { name: '업무-option' }));
+
+    await user.click(screen.getByLabelText('반복 일정'));
+
+    const repeatTypeLabel = screen.getByText('반복 유형');
+    const selectContainer = repeatTypeLabel.nextElementSibling;
+    const repeatTypeSelect = within(selectContainer).getByRole('combobox');
+    await user.click(repeatTypeSelect);
+    await user.click(screen.getByRole('option', { name: '매일' }));
+
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    const monthView = within(screen.getByTestId('month-view'));
+    const eventElement = await monthView.findByText('매일 반복');
+    const eventContainer = eventElement.parentElement.parentElement;
+
+    expect(eventContainer).toBeInTheDocument();
+
+    const repeatIcon = within(eventContainer).getByTestId('repeat-icon');
+    expect(repeatIcon).toBeInTheDocument();
+  });
 });
 
 describe('검색 기능', () => {
