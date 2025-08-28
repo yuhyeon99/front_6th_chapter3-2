@@ -477,3 +477,21 @@ describe('반복 일정', { timeout: 30000 }, () => {
     expect(eventList.queryByText('2025-10-16')).not.toBeInTheDocument();
   });
 });
+
+describe('폼 유효성 검사', { timeout: 30000 }, () => {
+  it('반복 일정 체크박스를 선택하고 반복 유형을 지정하지 않으면 에러 메시지를 표시한다', async () => {
+    const { user } = setup(<App />);
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '반복 테스트');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-20');
+    await user.type(screen.getByLabelText('시작 시간'), '10:00');
+    await user.type(screen.getByLabelText('종료 시간'), '11:00');
+
+    // 제출 버튼 클릭
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    // 에러 메시지 확인
+    expect(await screen.findByText(/반복 유형을 선택해\s*주세요[.!]?/)).toBeInTheDocument();
+  });
+});
