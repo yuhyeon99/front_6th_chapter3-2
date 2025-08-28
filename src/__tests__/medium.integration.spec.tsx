@@ -401,7 +401,6 @@ describe('반복 일정', () => {
     expect(within(originalEventContainer).getByTestId('repeat-icon')).toBeInTheDocument();
 
     // 2. 일정 수정
-    screen.logTestingPlaygroundURL();
     const editButton = screen.getByRole('button', { name: /edit event/i });
     await user.click(editButton);
 
@@ -417,6 +416,55 @@ describe('반복 일정', () => {
     const updatedEventContainer = updatedEventElement.parentElement?.parentElement;
     if (!updatedEventContainer) throw new Error('Updated event container not found');
     
+    expect(within(updatedEventContainer).queryByTestId('repeat-icon')).not.toBeInTheDocument();
+  });
+
+  it('반복 일정의 단일 인스턴스를 수정하면 해당 인스턴스만 단일 일정으로 변경되고 아이콘이 사라진다', async () => {
+    // 1. 설정: 단일 반복 일정을 모의(mock)합니다.
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({
+          events: [
+            {
+              id: 1,
+              title: '매일 아침 조깅',
+              date: '2025-10-15',
+              startTime: '08:00',
+              endTime: '09:00',
+              repeat: { type: 'daily', interval: 1 },
+            },
+          ],
+        });
+      })
+    );
+
+    const { user } = setup(<App />);
+
+    // 초기 이벤트가 표시되고 반복 아이콘이 있는지 확인합니다.
+    const monthView = within(screen.getByTestId('month-view'));
+    const originalEventElement = await monthView.findByText('매일 아침 조깅');
+    const originalEventContainer = originalEventElement.parentElement?.parentElement;
+    if (!originalEventContainer) throw new Error('원본 이벤트 컨테이너를 찾을 수 없습니다.');
+    expect(within(originalEventContainer).getByTestId('repeat-icon')).toBeInTheDocument();
+
+    // 2. 동작: 이벤트를 수정하고, 반복 체크박스를 해제하고, 제목을 변경합니다.
+    const editButton = screen.getByRole('button', { name: /edit event/i });
+    await user.click(editButton);
+
+    // 반복 체크박스 해제
+    await user.click(screen.getByLabelText('반복 일정')); // 체크박스를 해제합니다.
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 아침 조깅');
+
+    // 폼 제출
+    setupMockHandlerUpdating(); // 업데이트 API 호출을 모의합니다.
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    // 3. 단언: 수정된 인스턴스에 더 이상 반복 아이콘이 없는지 확인합니다.
+    const updatedEventElement = await monthView.findByText('수정된 아침 조깅');
+    const updatedEventContainer = updatedEventElement.parentElement?.parentElement;
+    if (!updatedEventContainer) throw new Error('업데이트된 이벤트 컨테이너를 찾을 수 없습니다.');
     expect(within(updatedEventContainer).queryByTestId('repeat-icon')).not.toBeInTheDocument();
   });
 });
