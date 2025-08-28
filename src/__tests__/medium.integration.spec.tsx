@@ -371,3 +371,52 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
+
+describe('반복 일정', () => {
+  it('반복 일정을 수정하면 단일 일정으로 변경되고, 반복 아이콘이 사라진다', async () => {
+    server.use(
+      http.get('/api/events', () => {
+        return HttpResponse.json({
+          events: [
+            {
+              id: 1,
+              title: '매일 아침 조깅',
+              date: '2025-10-15',
+              startTime: '08:00',
+              endTime: '09:00',
+              repeat: { type: 'daily', interval: 1 },
+            },
+          ],
+        });
+      })
+    );
+
+    const { user } = setup(<App />);
+
+    // 1. 수정 전, 월별 뷰에서 반복 아이콘 확인
+    const monthView = within(screen.getByTestId('month-view'));
+    const originalEventElement = await monthView.findByText('매일 아침 조깅');
+    const originalEventContainer = originalEventElement.parentElement?.parentElement;
+    if (!originalEventContainer) throw new Error('Original event container not found');
+    expect(within(originalEventContainer).getByTestId('repeat-icon')).toBeInTheDocument();
+
+    // 2. 일정 수정
+    screen.logTestingPlaygroundURL();
+    const editButton = screen.getByRole('button', { name: /edit event/i });
+    await user.click(editButton);
+
+    await user.clear(screen.getByLabelText('제목'));
+    await user.type(screen.getByLabelText('제목'), '수정된 아침 조깅');
+    
+    // 3. 수정 제출
+    setupMockHandlerUpdating(); // 수정 API 모킹 설정
+    await user.click(screen.getByTestId('event-submit-button'));
+
+    // 4. 수정 후, 월별 뷰에서 반복 아이콘이 사라졌는지 확인
+    const updatedEventElement = await monthView.findByText('수정된 아침 조깅');
+    const updatedEventContainer = updatedEventElement.parentElement?.parentElement;
+    if (!updatedEventContainer) throw new Error('Updated event container not found');
+    
+    expect(within(updatedEventContainer).queryByTestId('repeat-icon')).not.toBeInTheDocument();
+  });
+});
