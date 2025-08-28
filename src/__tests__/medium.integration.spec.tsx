@@ -265,7 +265,7 @@ describe('검색 기능', () => {
   });
 });
 
-describe('일정 충돌', { timeout: 30000 }, () => {
+describe('일정 충돌', () => {
   afterEach(() => {
     server.resetHandlers();
   });
@@ -361,7 +361,7 @@ describe('일정 충돌', { timeout: 30000 }, () => {
     expect(screen.getByText(/다음 일정과 겹칩니다/)).toBeInTheDocument();
     expect(screen.getByText('기존 수요일 회의 (2025-10-22 14:30-15:30)')).toBeInTheDocument();
   });
-});
+}, { timeout: 30000 });
 
 it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트가 노출된다', async () => {
   vi.setSystemTime(new Date('2025-10-15 08:49:59'));
@@ -380,7 +380,7 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
 
-describe('반복 일정', { timeout: 30000 }, () => {
+describe('반복 일정', () => {
   it('월별 뷰에서 반복 일정이 아이콘과 함께 표시되는지 확인한다', async () => {
     setupMockHandlerCreation();
     const { user } = setup(<App />);
@@ -475,9 +475,9 @@ describe('반복 일정', { timeout: 30000 }, () => {
     expect(updatedEvents).toHaveLength(2);
     expect(eventList.queryByText('2025-10-16')).not.toBeInTheDocument();
   });
-});
+}, { timeout: 30000 });
 
-describe('폼 유효성 검사', { timeout: 30000 }, () => {
+describe('폼 유효성 검사', () => {
   it('반복 일정 체크박스를 선택하고 반복 유형을 지정하지 않으면 에러 메시지를 표시한다', async () => {
     const { user } = setup(<App />);
     await user.click(screen.getAllByText('일정 추가')[0]);
@@ -493,4 +493,4 @@ describe('폼 유효성 검사', { timeout: 30000 }, () => {
     // 에러 메시지 확인
     expect(await screen.findByText(/반복 유형을 선택해\s*주세요[.!]?/)).toBeInTheDocument();
   });
-});
+}, { timeout: 30000 });
