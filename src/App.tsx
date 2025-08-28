@@ -142,6 +142,13 @@ function App() {
       notificationTime,
     };
 
+    // 반복 일정을 수정하면 단일 일정으로 변경됩니다.
+    if (editingEvent && editingEvent.repeat.type !== 'none') {
+      eventData.repeat.type = 'none';
+      eventData.repeat.interval = 0;
+      eventData.repeat.endDate = undefined;
+    }
+
     const overlapping = findOverlappingEvents(eventData, events);
     if (overlapping.length > 0) {
       setOverlappingEvents(overlapping);
