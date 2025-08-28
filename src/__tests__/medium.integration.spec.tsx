@@ -265,7 +265,7 @@ describe('검색 기능', () => {
   });
 });
 
-describe('일정 충돌', () => {
+describe('일정 충돌', { timeout: 30000 }, () => {
   afterEach(() => {
     server.resetHandlers();
   });
@@ -322,6 +322,45 @@ describe('일정 충돌', () => {
     expect(screen.getByText('일정 겹침 경고')).toBeInTheDocument();
     expect(screen.getByText(/다음 일정과 겹칩니다/)).toBeInTheDocument();
     expect(screen.getByText('기존 회의 (2025-10-15 09:00-10:00)')).toBeInTheDocument();
+  });
+
+  it('반복 일정을 생성할 때 기존 일정과 겹치면 경고가 표시된다', async () => {
+    setupMockHandlerCreation([
+      {
+        id: '1',
+        title: '기존 수요일 회의',
+        date: '2025-10-22',
+        startTime: '14:30',
+        endTime: '15:30',
+        description: '기존 팀 미팅',
+        location: '회의실 B',
+        category: '업무',
+        repeat: { type: 'none', interval: 0 },
+        notificationTime: 10,
+      },
+    ]);
+
+    const { user } = setup(<App />);
+
+    await user.click(screen.getAllByText('일정 추가')[0]);
+
+    await user.type(screen.getByLabelText('제목'), '매주 수요일 회의');
+    await user.type(screen.getByLabelText('날짜'), '2025-10-15');
+    await user.type(screen.getByLabelText('시작 시간'), '14:00');
+    await user.type(screen.getByLabelText('종료 시간'), '15:00');
+
+    const repeatTypeLabel = screen.getByText('반복 유형');
+    const selectContainer = repeatTypeLabel.nextElementSibling;
+    if (!selectContainer) throw new Error('반복 유형 select not found');
+    const repeatTypeSelect = within(selectContainer as HTMLElement).getByRole('combobox');
+    await user.click(repeatTypeSelect);
+    await user.click(screen.getByRole('option', { name: '매주' }));
+
+    await user.click(screen.getByTestId('event-submit-button'));
+    screen.logTestingPlaygroundURL();
+    expect(await screen.findByText('일정 겹침 경고')).toBeInTheDocument();
+    expect(screen.getByText(/다음 일정과 겹칩니다/)).toBeInTheDocument();
+    expect(screen.getByText('기존 수요일 회의 (2025-10-22 14:30-15:30)')).toBeInTheDocument();
   });
 });
 
@@ -420,7 +459,7 @@ describe('반복 일정', { timeout: 30000 }, () => {
     expect(within(updatedEventContainer).queryByTestId('repeat-icon')).not.toBeInTheDocument();
   });
 
-  it.only('반복 일정을 삭제하면 해당 일정만 삭제합니다.', async () => {
+  it('반복 일정을 삭제하면 해당 일정만 삭제합니다.', async () => {
     setupMockHandlerRepeatDelete();
     const { user } = setup(<App />);
 
