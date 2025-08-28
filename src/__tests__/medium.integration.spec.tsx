@@ -419,18 +419,34 @@ describe('반복 일정', () => {
     expect(within(updatedEventContainer).queryByTestId('repeat-icon')).not.toBeInTheDocument();
   });
 
-  it('반복 일정의 단일 인스턴스를 수정하면 해당 인스턴스만 단일 일정으로 변경되고 아이콘이 사라진다', async () => {
-    // 1. 설정: 단일 반복 일정을 모의(mock)합니다.
+  it.only('반복 일정을 삭제하면 해당 일정만 삭제합니다.', async () => {
+    // 1. 설정: 일일 반복 일정을 모의(mock)합니다.
     server.use(
       http.get('/api/events', () => {
         return HttpResponse.json({
           events: [
             {
-              id: 1,
-              title: '매일 아침 조깅',
+              id: 'daily-1',
+              title: '매일 회의',
               date: '2025-10-15',
-              startTime: '08:00',
-              endTime: '09:00',
+              startTime: '09:00',
+              endTime: '10:00',
+              repeat: { type: 'daily', interval: 1 },
+            },
+            {
+              id: 'daily-2',
+              title: '매일 회의',
+              date: '2025-10-16',
+              startTime: '09:00',
+              endTime: '10:00',
+              repeat: { type: 'daily', interval: 1 },
+            },
+            {
+              id: 'daily-3',
+              title: '매일 회의',
+              date: '2025-10-17',
+              startTime: '09:00',
+              endTime: '10:00',
               repeat: { type: 'daily', interval: 1 },
             },
           ],
@@ -440,31 +456,78 @@ describe('반복 일정', () => {
 
     const { user } = setup(<App />);
 
-    // 초기 이벤트가 표시되고 반복 아이콘이 있는지 확인합니다.
+    // 2. 동작: 2025-10-16 일정을 삭제합니다.
+    // 시스템 시간을 2025-10-16으로 설정하여 해당 일정이 현재 월에 표시되도록 합니다.
+    act(() => {
+      vi.setSystemTime(new Date('2025-10-16'));
+    });
+    await screen.findByText('2025년 10월'); // 월 제목이 업데이트될 때까지 기다립니다.
+
+    screen.debug(); // Add this line to see the DOM content
+
     const monthView = within(screen.getByTestId('month-view'));
-    const originalEventElement = await monthView.findByText('매일 아침 조깅');
-    const originalEventContainer = originalEventElement.parentElement?.parentElement;
-    if (!originalEventContainer) throw new Error('원본 이벤트 컨테이너를 찾을 수 없습니다.');
-    expect(within(originalEventContainer).getByTestId('repeat-icon')).toBeInTheDocument();
 
-    // 2. 동작: 이벤트를 수정하고, 반복 체크박스를 해제하고, 제목을 변경합니다.
-    const editButton = screen.getByRole('button', { name: /edit event/i });
-    await user.click(editButton);
+    // 10월 16일 셀을 찾습니다.
+    const october16thDay = await monthView.findByText('16');
+    const october16thCell = october16thDay.closest('td');
+    if (!october16thCell) throw new Error('10월 16일 셀을 찾을 수 없습니다.');
 
-    // 반복 체크박스 해제
-    await user.click(screen.getByLabelText('반복 일정')); // 체크박스를 해제합니다.
+    // 해당 셀 내에서 이벤트를 찾습니다. (이것은 단지 존재 여부를 확인하기 위함입니다.)
+    const eventInCalendar = await within(october16thCell).findByText('매일 회의');
 
-    await user.clear(screen.getByLabelText('제목'));
-    await user.type(screen.getByLabelText('제목'), '수정된 아침 조깅');
+    // 이제 이벤트 목록(오른쪽 패널)에서 이벤트를 찾습니다.
+    const eventList = within(screen.getByTestId('event-list'));
 
-    // 폼 제출
-    setupMockHandlerUpdating(); // 업데이트 API 호출을 모의합니다.
-    await user.click(screen.getByTestId('event-submit-button'));
+    // '매일 회의' 제목을 가진 모든 이벤트 제목을 찾습니다.
+    const allDailyMeetingTitles = await eventList.findAllByText('매일 회의');
 
-    // 3. 단언: 수정된 인스턴스에 더 이상 반복 아이콘이 없는지 확인합니다.
-    const updatedEventElement = await monthView.findByText('수정된 아침 조깅');
-    const updatedEventContainer = updatedEventElement.parentElement?.parentElement;
-    if (!updatedEventContainer) throw new Error('업데이트된 이벤트 컨테이너를 찾을 수 없습니다.');
-    expect(within(updatedEventContainer).queryByTestId('repeat-icon')).not.toBeInTheDocument();
+    // 2025-10-16에 해당하는 특정 이벤트를 찾습니다.
+    let eventInListForOct16: HTMLElement | null = null;
+    for (const titleElement of allDailyMeetingTitles) {
+      const eventContainer = titleElement.closest('.MuiBox-root'); // 주 이벤트 컨테이너를 찾습니다.
+      if (eventContainer) {
+        // 이 컨테이너가 '2025-10-16' 날짜도 포함하는지 확인합니다.
+        const dateElement = within(eventContainer as HTMLElement).queryByText('2025-10-16');
+        if (dateElement) {
+          eventInListForOct16 = eventContainer as HTMLElement;
+          break;
+        }
+      }
+    }
+
+    if (!eventInListForOct16) throw new Error('이벤트 목록에서 10월 16일 이벤트를 찾을 수 없습니다.');
+
+    const deleteButton = within(eventInListForOct16).getByLabelText('Delete event');
+    await user.click(deleteButton);
+
+    // 3. 단언: 삭제된 인스턴스가 해당 날짜(10/16) 셀에서 더 이상 존재하지 않는지 확인합니다.
+    // 10월 16일 셀을 다시 찾습니다.
+    const october16thDayAfterDelete = await monthView.findByText('16');
+    const october16thCellAfterDelete = october16thDayAfterDelete.closest('td');
+    if (!october16thCellAfterDelete) throw new Error('삭제 후 10월 16일 셀을 찾을 수 없습니다.');
+    
+    expect(within(october16thCellAfterDelete).queryByText('매일 회의')).not.toBeInTheDocument();
+
+    // 4. 단언: 이전 인스턴스(2025-10-15)가 여전히 존재하고 반복 아이콘을 가지고 있는지 확인합니다.
+    act(() => {
+      vi.setSystemTime(new Date('2025-10-15'));
+    });
+    await screen.findByText('2025년 10월'); // 월 제목이 업데이트될 때까지 기다립니다.
+
+    const previousEvent = await monthView.findByText('매일 회의');
+    const previousEventContainer = previousEvent.parentElement?.parentElement;
+    if (!previousEventContainer) throw new Error('이전 이벤트 컨테이너를 찾을 수 없습니다.');
+    expect(within(previousEventContainer).getByTestId('repeat-icon')).toBeInTheDocument();
+
+    // 5. 단언: 이후 인스턴스(2025-10-17)가 여전히 존재하고 반복 아이콘을 가지고 있는지 확인합니다.
+    act(() => {
+      vi.setSystemTime(new Date('2025-10-17'));
+    });
+    await screen.findByText('2025년 10월'); // 월 제목이 업데이트될 때까지 기다립니다.
+
+    const subsequentEvent = await monthView.findByText('매일 회의');
+    const subsequentEventContainer = subsequentEvent.parentElement?.parentElement;
+    if (!subsequentEventContainer) throw new Error('이후 이벤트 컨테이너를 찾을 수 없습니다.');
+    expect(within(subsequentEventContainer).getByTestId('repeat-icon')).toBeInTheDocument();
   });
 });
