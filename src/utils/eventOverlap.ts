@@ -18,8 +18,45 @@ export function isOverlapping(event1: Event | EventForm, event2: Event | EventFo
   return start1 < end2 && start2 < end1;
 }
 
+function generateRecurringEvents(event: Event | EventForm): EventForm[] {
+  const instances: EventForm[] = [];
+  if (event.repeat.type === 'none') {
+    return instances;
+  }
+
+  const startDate = new Date(event.date);
+  const endDate = new Date(startDate);
+  endDate.setFullYear(startDate.getFullYear() + 1);
+
+  let currentDate = new Date(startDate);
+
+  if (event.repeat.type === 'weekly') {
+    currentDate.setDate(currentDate.getDate() + 7);
+    while (currentDate <= endDate) {
+      instances.push({
+        ...event,
+        date: currentDate.toISOString().split('T')[0],
+      });
+      currentDate.setDate(currentDate.getDate() + 7);
+    }
+  }
+
+  return instances;
+}
+
 export function findOverlappingEvents(newEvent: Event | EventForm, events: Event[]) {
-  return events.filter(
-    (event) => event.id !== (newEvent as Event).id && isOverlapping(event, newEvent)
-  );
+  const recurringInstances = generateRecurringEvents(newEvent);
+
+  const allInstances = [newEvent, ...recurringInstances];
+
+  for (const instance of allInstances) {
+    const overlapping = events.filter(
+      (event) => event.id !== (instance as Event).id && isOverlapping(event, instance)
+    );
+    if (overlapping.length > 0) {
+      return overlapping;
+    }
+  }
+
+  return [];
 }
