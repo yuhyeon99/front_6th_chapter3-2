@@ -34,10 +34,17 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           }
         );
       } else {
-        if (eventData.repeat.type !== 'none' && eventData.repeat.endDate) {
+        // NOTE: 깊은 복사를 통해 eventData가 예상치 못하게 변경되는 것을 방지합니다.
+        const newEventData = JSON.parse(JSON.stringify(eventData));
+
+        if (newEventData.repeat.type !== 'none' && !newEventData.repeat.endDate) {
+          newEventData.repeat.endDate = '2025-06-30';
+        }
+
+        if (newEventData.repeat.type !== 'none' && newEventData.repeat.endDate) {
           const recurringEvents = generateRecurringEvents(
-            eventData as EventForm,
-            eventData.repeat.endDate
+            newEventData as EventForm,
+            newEventData.repeat.endDate
           );
           response = await fetch('/api/events-list', {
             method: 'POST',
@@ -48,7 +55,7 @@ export const useEventOperations = (editing: boolean, onSave?: () => void) => {
           response = await fetch('/api/events', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(eventData),
+            body: JSON.stringify(newEventData),
           });
         }
       }
