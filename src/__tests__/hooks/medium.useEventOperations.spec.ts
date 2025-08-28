@@ -242,3 +242,38 @@ it('반복일정을 삭제하면 해당 일정만 삭제합니다.', async () =>
 
   server.resetHandlers();
 });
+
+it('반복 종료일이 없는 경우, 기본값으로 2025-06-30이 설정되어야 한다', async () => {
+  let capturedEvents: Event[] = [];
+
+  server.use(
+    http.post('/api/events-list', async ({ request }) => {
+      const { events } = (await request.json()) as { events: Event[] };
+      capturedEvents = events;
+      return HttpResponse.json({ events }, { status: 201 });
+    })
+  );
+
+  const { result } = renderHook(() => useEventOperations(false));
+
+  await act(() => Promise.resolve());
+
+  const newEvent: Omit<Event, 'id'> = {
+    title: '매일 반복되는 이벤트',
+    date: '2025-06-01',
+    startTime: '10:00',
+    endTime: '11:00',
+    description: '종료일 없는 반복',
+    location: '테스트룸',
+    category: '업무',
+    repeat: { type: 'daily', interval: 1 }, // No endDate
+    notificationTime: 10,
+  };
+
+  await act(async () => {
+    await result.current.saveEvent(newEvent as Event);
+  });
+
+  expect(capturedEvents).not.toBeNull();
+  expect(capturedEvents?.[0]?.repeat?.endDate).toBe('2025-06-30');
+});
