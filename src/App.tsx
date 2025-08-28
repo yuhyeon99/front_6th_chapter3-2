@@ -115,6 +115,11 @@ function App() {
   const { enqueueSnackbar } = useSnackbar();
 
   const addOrUpdateEvent = async () => {
+    if (isRepeating && repeatType === 'none') {
+      enqueueSnackbar('반복 유형을 선택해 주세요.', { variant: 'error' });
+      return;
+    }
+
     if (!title || !date || !startTime || !endTime) {
       enqueueSnackbar('필수 정보를 모두 입력해주세요.', { variant: 'error' });
       return;
@@ -460,7 +465,9 @@ function App() {
                   size="small"
                   value={repeatType}
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
+                  defaultValue="none"
                 >
+                  <MenuItem value="none" style={{ display: 'none' }}>None</MenuItem>
                   <MenuItem value="daily">매일</MenuItem>
                   <MenuItem value="weekly">매주</MenuItem>
                   <MenuItem value="monthly">매월</MenuItem>
