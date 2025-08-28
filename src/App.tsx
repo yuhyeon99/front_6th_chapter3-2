@@ -1,11 +1,10 @@
-import Notifications from '@mui/icons-material/Notifications';
-import Close from '@mui/icons-material/Close';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
+import Close from '@mui/icons-material/Close';
 import Delete from '@mui/icons-material/Delete';
 import Edit from '@mui/icons-material/Edit';
+import Notifications from '@mui/icons-material/Notifications';
 import Repeat from '@mui/icons-material/Repeat';
-
 import {
   Alert,
   AlertTitle,
@@ -219,7 +218,9 @@ function App() {
                             }}
                           >
                             <Stack direction="row" spacing={1} alignItems="center">
-                              {event.repeat.type !== 'none' && <Repeat data-testid="repeat-icon" fontSize="small" />}
+                              {event.repeat.type !== 'none' && (
+                                <Repeat data-testid="repeat-icon" fontSize="small" />
+                              )}
                               {isNotified && <Notifications fontSize="small" />}
                               <Typography
                                 variant="caption"
@@ -307,7 +308,9 @@ function App() {
                                   }}
                                 >
                                   <Stack direction="row" spacing={1} alignItems="center">
-                                    {event.repeat.type !== 'none' && <Repeat data-testid="repeat-icon" fontSize="small" />}
+                                    {event.repeat.type !== 'none' && (
+                                      <Repeat data-testid="repeat-icon" fontSize="small" />
+                                    )}
                                     {isNotified && <Notifications fontSize="small" />}
                                     <Typography
                                       variant="caption"
@@ -467,7 +470,9 @@ function App() {
                   onChange={(e) => setRepeatType(e.target.value as RepeatType)}
                   defaultValue="none"
                 >
-                  <MenuItem value="none" style={{ display: 'none' }}>None</MenuItem>
+                  <MenuItem value="none" style={{ display: 'none' }}>
+                    None
+                  </MenuItem>
                   <MenuItem value="daily">매일</MenuItem>
                   <MenuItem value="weekly">매주</MenuItem>
                   <MenuItem value="monthly">매월</MenuItem>

@@ -90,7 +90,7 @@ export function generateRecurringEvents(event: EventForm, repeatEndDate: string)
           const nextYear = tempDate.getFullYear();
           const newDate = new Date(nextYear, nextMonth, originalDay);
 
-          if (newDate.getMonth() === (nextMonth % 12)) {
+          if (newDate.getMonth() === nextMonth % 12) {
             currentDate = newDate;
             foundNextDate = true;
           } else {

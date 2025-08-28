@@ -357,7 +357,6 @@ describe('일정 충돌', { timeout: 30000 }, () => {
     await user.click(screen.getByRole('option', { name: '매주' }));
 
     await user.click(screen.getByTestId('event-submit-button'));
-    screen.logTestingPlaygroundURL();
     expect(await screen.findByText('일정 겹침 경고')).toBeInTheDocument();
     expect(screen.getByText(/다음 일정과 겹칩니다/)).toBeInTheDocument();
     expect(screen.getByText('기존 수요일 회의 (2025-10-22 14:30-15:30)')).toBeInTheDocument();
@@ -446,7 +445,7 @@ describe('반복 일정', { timeout: 30000 }, () => {
 
     await user.clear(screen.getByLabelText('제목'));
     await user.type(screen.getByLabelText('제목'), '수정된 아침 조깅');
-    
+
     // 3. 수정 제출
     setupMockHandlerUpdating(); // 수정 API 모킹 설정
     await user.click(screen.getByTestId('event-submit-button'));
@@ -455,7 +454,7 @@ describe('반복 일정', { timeout: 30000 }, () => {
     const updatedEventElement = await monthView.findByText('수정된 아침 조깅');
     const updatedEventContainer = updatedEventElement.parentElement?.parentElement;
     if (!updatedEventContainer) throw new Error('Updated event container not found');
-    
+
     expect(within(updatedEventContainer).queryByTestId('repeat-icon')).not.toBeInTheDocument();
   });
 

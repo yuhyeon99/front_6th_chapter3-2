@@ -216,4 +216,3 @@ describe('generateRecurringEvents', () => {
     expect(result[0].date).toBe('2025-08-25');
   });
 });
-
