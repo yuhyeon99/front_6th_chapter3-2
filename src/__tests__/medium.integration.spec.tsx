@@ -36,9 +36,22 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & { isRepeating?: boolean; repeatType?: RepeatType }
+  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & {
+    isRepeating?: boolean;
+    repeatType?: RepeatType;
+  }
 ) => {
-  const { title, date, startTime, endTime, description, location, category, isRepeating, repeatType } = form;
+  const {
+    title,
+    date,
+    startTime,
+    endTime,
+    description,
+    location,
+    category,
+    isRepeating,
+    repeatType,
+  } = form;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
@@ -61,7 +74,14 @@ const saveSchedule = async (
       const repeatTypeSelect = within(selectContainer as HTMLElement).getByRole('combobox');
       await user.click(repeatTypeSelect);
       // Map repeatType enum to Korean text for the option
-      const repeatTypeText = repeatType === 'daily' ? '매일' : repeatType === 'weekly' ? '매주' : repeatType === 'monthly' ? '매월' : '매년';
+      const repeatTypeText =
+        repeatType === 'daily'
+          ? '매일'
+          : repeatType === 'weekly'
+            ? '매주'
+            : repeatType === 'monthly'
+              ? '매월'
+              : '매년';
       await user.click(screen.getByRole('option', { name: repeatTypeText })); // Select the option
     }
   } else {

@@ -75,7 +75,8 @@ export function generateRecurringEvents(event: EventForm, repeatEndDate: string)
   let endDate: Date | null = null;
   if (repeatEndDate) {
     const parsedEndDate = new Date(repeatEndDate);
-    if (!isNaN(parsedEndDate.getTime())) { // Check if it's a valid date
+    if (!isNaN(parsedEndDate.getTime())) {
+      // Check if it's a valid date
       endDate = parsedEndDate;
     }
   }
@@ -103,7 +104,7 @@ export function generateRecurringEvents(event: EventForm, repeatEndDate: string)
         const nextYear = tempDate.getFullYear();
         const newDate = new Date(nextYear, nextMonth, originalDay);
 
-        if (newDate.getMonth() === (nextMonth % 12)) {
+        if (newDate.getMonth() === nextMonth % 12) {
           currentDate = newDate;
           foundNextDate = true;
         } else {
@@ -151,7 +152,7 @@ export function generateRecurringEvents(event: EventForm, repeatEndDate: string)
           const nextYear = tempDate.getFullYear();
           const newDate = new Date(nextYear, nextMonth, originalDay);
 
-          if (newDate.getMonth() === (nextMonth % 12)) {
+          if (newDate.getMonth() === nextMonth % 12) {
             currentDate = newDate;
             foundNextDate = true;
           } else {
