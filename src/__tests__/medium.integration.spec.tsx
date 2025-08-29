@@ -14,7 +14,7 @@ import {
 } from '../__mocks__/handlersUtils';
 import App from '../App';
 import { server } from '../setupTests';
-import { Event } from '../types';
+import { Event, RepeatType } from '../types';
 
 const theme = createTheme();
 
@@ -36,9 +36,9 @@ const setup = (element: ReactElement) => {
 // ! Hard 여기 제공 안함
 const saveSchedule = async (
   user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
+  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'> & { isRepeating?: boolean; repeatType?: RepeatType }
 ) => {
-  const { title, date, startTime, endTime, location, description, category } = form;
+  const { title, date, startTime, endTime, description, location, category, isRepeating, repeatType } = form;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
@@ -51,6 +51,22 @@ const saveSchedule = async (
   await user.click(screen.getByLabelText('카테고리'));
   await user.click(within(screen.getByLabelText('카테고리')).getByRole('combobox'));
   await user.click(screen.getByRole('option', { name: `${category}-option` }));
+
+  // Handle isRepeating and repeatType
+  if (isRepeating) {
+    if (repeatType) {
+      const repeatTypeLabel = screen.getByText('반복 유형');
+      const selectContainer = repeatTypeLabel.nextElementSibling;
+      if (!selectContainer) throw new Error('반복 유형 select not found');
+      const repeatTypeSelect = within(selectContainer as HTMLElement).getByRole('combobox');
+      await user.click(repeatTypeSelect);
+      // Map repeatType enum to Korean text for the option
+      const repeatTypeText = repeatType === 'daily' ? '매일' : repeatType === 'weekly' ? '매주' : repeatType === 'monthly' ? '매월' : '매년';
+      await user.click(screen.getByRole('option', { name: repeatTypeText })); // Select the option
+    }
+  } else {
+    await user.click(screen.getByLabelText('반복 일정')); // Check the checkbox
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -69,6 +85,7 @@ describe('일정 CRUD 및 기본 기능', () => {
       description: '프로젝트 진행 상황 논의',
       location: '회의실 A',
       category: '업무',
+      isRepeating: false,
     });
 
     const eventList = within(screen.getByTestId('event-list'));
@@ -141,6 +158,7 @@ describe('일정 뷰', () => {
       description: '이번주 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      isRepeating: false,
     });
 
     await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
@@ -174,6 +192,7 @@ describe('일정 뷰', () => {
       description: '이번달 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      isRepeating: false,
     });
 
     const monthView = within(screen.getByTestId('month-view'));
@@ -298,6 +317,7 @@ describe(
         description: '설명',
         location: '회의실 A',
         category: '업무',
+        isRepeating: false,
       });
 
       expect(screen.getByText('일정 겹침 경고')).toBeInTheDocument();
